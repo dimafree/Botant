@@ -1,0 +1,81 @@
+import { useNavigation } from "@react-navigation/native";
+import React, { useState } from "react";
+import { Keyboard, Platform, Alert } from "react-native";
+import Button from "../../components/Button";
+// prettier-ignore
+import { IdentificationCall, IdentificationCloseKeyboard, IdentificationContent, IdentificationEmoji, IdentificationFooter, IdentificationForm, IdentificationHeader, IdentificationInput, IdentificationKeyboard, IdentificationWrapper } from './Identification.styles';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const Identification: React.FC = ({}) => {
+    const navigation = useNavigation();
+    const [isFilled, setIsFilled] = useState(false);
+    const [name, setName] = useState<string>();
+    const [isFocused, setIsFocused] = useState(false);
+
+    const handleInputFocus = () => setIsFocused(true);
+    const handleInputBlur = () => {
+        setIsFocused(false);
+        setIsFilled(!!name);
+    };
+    const handleInputChange = (value: string) => {
+        setIsFilled(!!value);
+        setName(value);
+    };
+
+    const handleSubmit = async () => {
+        if (!name) return Alert.alert("Please write your name 🤔");
+
+        try {
+            await AsyncStorage.setItem("@botant:user", name);
+            navigation.navigate("Confirmation", {
+                title: "All set",
+                subtitle:
+                    "Now let's start taking care of your plants very carefully.",
+                buttonTitle: "Start now",
+                icon: "smile",
+                nextScreen: "plantSelection",
+            });
+        } catch {
+            Alert.alert("Something went wrong! 😣");
+        }
+    };
+
+    return (
+        <IdentificationWrapper>
+            <IdentificationKeyboard
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+                <IdentificationCloseKeyboard onPress={Keyboard.dismiss}>
+                    <IdentificationContent>
+                        <IdentificationForm>
+                            <IdentificationHeader>
+                                <IdentificationEmoji>
+                                    {!isFilled ? "😀" : "😄"}
+                                </IdentificationEmoji>
+                                <IdentificationCall>
+                                    How can {"\n"}
+                                    we call you?
+                                </IdentificationCall>
+                            </IdentificationHeader>
+                            <IdentificationInput
+                                placeholder="Your name here"
+                                onFocus={handleInputFocus}
+                                onBlur={handleInputBlur}
+                                isFocused={isFocused || isFilled}
+                                onChangeText={handleInputChange}
+                                onSubmitEditing={handleSubmit}
+                            />
+                            <IdentificationFooter>
+                                <Button
+                                    title="Confirm"
+                                    onPress={handleSubmit}
+                                />
+                            </IdentificationFooter>
+                        </IdentificationForm>
+                    </IdentificationContent>
+                </IdentificationCloseKeyboard>
+            </IdentificationKeyboard>
+        </IdentificationWrapper>
+    );
+};
+export default Identification;
